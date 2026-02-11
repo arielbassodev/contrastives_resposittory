@@ -11,7 +11,6 @@ import torchvision.datasets as datasets
 from utils import *
 device = ("cuda" if torch.cuda.is_available() else "cpu")
 
-
 # Train Simclr with the NT-Xent loss
 
 def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_groups):
@@ -44,8 +43,8 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
         for step, (data, label) in enumerate(tqdm(train_loader)):
             optimizer.zero_grad()
             batch_1, batch_2 = global_global_augmentation(data, active_groups)
-            batch_1, batch_2 = batch_1.to('cuda'), batch_2.to('cuda')
-            data = data.to('cuda')
+            batch_1, batch_2 = batch_1.to(device), batch_2.to(device)
+            data = data.to(device)
             embedding_batch_1 = model(batch_1)
             embedding_batch_2 = model(batch_2)
             embedding = model(data)
@@ -56,7 +55,6 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
             loss = loss_1 + loss_2 + loss_3
             loss.backward()
             optimizer.step()
-            
             running_loss += loss.item()
         
         epoch_loss = running_loss / len(train_loader)
@@ -64,9 +62,6 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
         epoch_losses.append(epoch_loss)
     plot_training_loss(epoch_loss, epochs)
     
-
-
-
 
 # # train Slf with an MSE loss.
 # def Slf_trainer():
