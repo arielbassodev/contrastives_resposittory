@@ -5,12 +5,14 @@ from contrastive_approaches import *
 from torchvision.models import resnet50
 import torch.optim as optim
 import lightly
+import matplotlib.pyplot as plt
 from lightly.loss import NTXentLoss
 import torchvision.datasets as datasets
 from utils import *
 device = ("cuda" if torch.cuda.is_available() else "cpu")
 
 
+# Train Simclr with the NT-Xent loss
 
 def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_groups):
   epoch_losses = []
@@ -30,6 +32,8 @@ def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_gro
     print(epoch_loss)
     epoch_losses.append(epoch_loss)
   plot_training_loss(epoch_loss, epochs)
+        
+# Train Slfpn with the MSE loss
         
 def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, active_groups):
     epoch_losses = []
@@ -60,7 +64,7 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
         epoch_losses.append(epoch_loss)
     plot_training_loss(epoch_loss, epochs)
     
-import matplotlib.pyplot as plt
+
 
 
 
