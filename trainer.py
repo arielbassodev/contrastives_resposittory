@@ -8,6 +8,8 @@ import lightly
 import matplotlib.pyplot as plt
 from lightly.loss import NTXentLoss
 import torchvision.datasets as datasets
+
+from datamodule import CassavaDataModule
 from utils import *
 device = ("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -31,7 +33,7 @@ def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_gro
     epoch_loss = running_loss / len(train_loader)
     print(epoch_loss)
     epoch_losses.append(epoch_loss)
-  plot_training_loss(epoch_loss, epochs)
+  # plot_training_loss(epoch_loss, epochs)
         
 # Train Slfpn with the MSE loss
         
@@ -62,7 +64,7 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
         epoch_loss = running_loss / len(train_loader)
         print(epoch_loss)
         epoch_losses.append(epoch_loss)
-    plot_training_loss(epoch_loss, epochs)
+    # plot_training_loss(epoch_loss, epochs)
     
 
 
@@ -71,18 +73,32 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
 # # train Slf with an MSE loss.
 # def Slf_trainer():
 
-# backbone = resnet50(pretrained= True)    
-# backbone = nn.Sequential(*list(backbone.children())[:-1]).to(device)
-# projection_head = Projection_class(2048, 1024, 128).to(device)
-# model = SimCLR(backbone, projection_head)
-# optimizer = optim.SGD(model.parameters(), lr=0.001)
-# criterion = NTXentLoss()
-# transform = transforms.Compose([transforms.ToTensor(),
-#                                 transforms.Resize((255, 255)),
-#                                ])
+backbone = resnet50(pretrained=True)
+backbone = nn.Sequential(*list(backbone.children())[:-1]).to(device)
+projection_head = Projection_class(2048, 1024, 128).to(device)
+model = SimCLR(backbone, projection_head)
+optimizer = optim.SGD(model.parameters(), lr=0.001)
+criterion = NTXentLoss()
+transform = transforms.Compose([transforms.ToTensor(),
+                                transforms.Resize((255, 255)),
+                               ])
 # train_set = datasets.ImageFolder(root='C:/Users/abassoma/Documents/Dataset/Cassava/for_training',transform=transform)
 # val_set = datasets.ImageFolder(root='C:/Users/abassoma/Documents/Dataset/Cassava/for_training',transform=transform)
-# batch_size = 32
-# train_loader = torch.utils.data.DataLoader(train_set,batch_size,shuffle=True)
-# test_loader = torch.utils.data.DataLoader(val_set,batch_size,shuffle=False)
-# Simclr_trainer(model=model, train_loader=train_loader, criterion=criterion, optimizer=optimizer, epochs=10, active_groups=["rotations"])
+batch_size = 32
+
+
+img_dir ='C:/Users/rkonan/Desktop/Deep_Learning_Agriculture/Dataset/Kaggle_cassava-leaf-disease-classification/small_toy/images'
+csv_file ='C:/Users/rkonan/Desktop/Deep_Learning_Agriculture/Dataset/Kaggle_cassava-leaf-disease-classification/small_toy/train.csv'
+json_file='C:/Users/rkonan/Desktop/Deep_Learning_Agriculture/Dataset/Kaggle_cassava-leaf-disease-classification/small_toy/label_num_to_disease_map.json'
+
+dm = CassavaDataModule(data_dir=(img_dir, csv_file, json_file), batch_size = batch_size, input_img_size = (224, 224),
+                 val_split = 0.2, test_split = 0.2, n_transforms_to_choose=2,
+                 base_transform_to_use= 'resnet50',
+                 num_workers=0, random_seed=42)
+dm.setup(stage="fit") # calling in the fit stage to initialize the train and validation dataloaders
+train_set= dm.train_dataloader()
+val_set= dm.val_dataloader()
+train_loader = dm.train_dataloader()
+test_loader = dm.val_dataloader()
+
+Simclr_trainer(model=model, train_loader=train_loader, criterion=criterion, optimizer=optimizer, epochs=3, active_groups=["rotations"])
