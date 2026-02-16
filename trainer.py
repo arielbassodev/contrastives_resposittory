@@ -90,7 +90,6 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
 
 # # train Slf with an MSE loss.
 # def Slf_trainer():
-
 # backbone = resnet50(pretrained= True)    
 # backbone = nn.Sequential(*list(backbone.children())[:-1]).to(device)
 # projection_head = Projection_class(2048, 1024, 128).to(device)
