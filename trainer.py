@@ -9,9 +9,34 @@ import matplotlib.pyplot as plt
 from lightly.loss import NTXentLoss
 import torchvision.datasets as datasets
 from utils import *
+from pytorch_metric_learning.losses import SupConLoss
 device = ("cuda" if torch.cuda.is_available() else "cpu")
 
-# Train Simclr with the NT-Xent loss
+
+
+# Train supcon with SupCon losses
+def supcon_trainer(model, train_loader, criterion, optimizer, epochs, active_groups):
+    epoch_losses = []
+    running_loss = 0
+    for step, (data, label) in enumerate(tqdm(train_loader)):
+        optimizer.zero_grad()
+        first_batch, second_batch = global_global_augmentation(data, active_groups, device)
+        batch_label = label.shape[0]
+        instances_batch  = torch.cat([first_batch, second_batch], dim=0)
+        z_instance_batch = model(instances_batch)
+        z_first_batch, z_second_batch = torch.split(z_instance_batch, [batch_label, batch_label], dim=0)
+        z = torch.cat([z_first_batch, z_second_batch], dim=0)
+        labels = torch.cat([label, label], dim=0)
+        loss = criterion(z, labels)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+    epoch_loss = running_loss / len(train_loader)
+    epoch_losses.append(epoch_loss)
+    print(epoch_losses)
+    plot_training_loss(epoch_loss, epochs)
+          
+# Train Simclr with the NT-Xent losses
 
 def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_groups):
   epoch_losses = []
@@ -71,7 +96,7 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
 # projection_head = Projection_class(2048, 1024, 128).to(device)
 # model = SimCLR(backbone, projection_head)
 # optimizer = optim.SGD(model.parameters(), lr=0.001)
-# criterion = NTXentLoss()
+# criterion = SupConLoss()
 # transform = transforms.Compose([transforms.ToTensor(),
 #                                 transforms.Resize((255, 255)),
 #                                ])
@@ -80,4 +105,4 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
 # batch_size = 32
 # train_loader = torch.utils.data.DataLoader(train_set,batch_size,shuffle=True)
 # test_loader = torch.utils.data.DataLoader(val_set,batch_size,shuffle=False)
-# Simclr_trainer(model=model, train_loader=train_loader, criterion=criterion, optimizer=optimizer, epochs=10, active_groups=["rotations"])
+# supcon_trainer(model=model, train_loader=train_loader, criterion=criterion, optimizer=optimizer, epochs=10, active_groups=["rotations"])
