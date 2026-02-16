@@ -8,7 +8,6 @@ import lightly
 import matplotlib.pyplot as plt
 from lightly.loss import NTXentLoss
 import torchvision.datasets as datasets
-
 from datamodule import CassavaDataModule
 from utils import *
 from pytorch_metric_learning.losses import SupConLoss
@@ -35,7 +34,7 @@ def supcon_trainer(model, train_loader, criterion, optimizer, epochs, active_gro
         running_loss += loss.item()
     epoch_loss = running_loss / len(train_loader)
     epoch_losses.append(epoch_loss)
-    print(epoch_losses)
+    print(epoch_loss)
     plot_training_loss(epoch_loss, epochs)
           
 # Train Simclr with the NT-Xent losses
