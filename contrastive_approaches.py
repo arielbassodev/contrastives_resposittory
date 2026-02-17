@@ -144,7 +144,7 @@ class CLRLightningModule(L.LightningModule):
         embedding_batch_2 = self(batch_2)
         embedding = self(data)
         loss_1 = self.criterion(embedding_batch_1, embedding_batch_2)
-        loss_2 = self.criterion(embedding, embedding_batch_2)
+        loss_2 = self.criterion(embedding, embedding_batch_1)
         original_projection = self.projector(embedding)
         loss_3 = self.criterion(original_projection, embedding_batch_2.detach())
         loss = loss_1 + loss_2 + loss_3
