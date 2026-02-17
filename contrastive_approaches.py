@@ -5,12 +5,15 @@ import lightning as L
 from typing import  Literal
 from lightly.loss import NTXentLoss
 import torchvision
+from torch.nn import MSELoss
+
 from augmentation import global_global_augmentation
 from utils import ContrastiveApproachType, OptimizerType
 from app_logger import logger
 from utils import BackBonesType
 from typing import Any
 import itertools
+from pytorch_metric_learning.losses import SupConLoss
 
 # Projection head for the different contrastive learning approaches
 class ProjectionClass(nn.Module):
@@ -114,10 +117,14 @@ class CLRLightningModule(L.LightningModule):
                                          hidden_feature=1024,
                                          out_feature=projector_out_feature)
         self.contrastive_approach = contrastive_approach
-        self.criterion = NTXentLoss()
         self.lr = lr
         self.optimizer_name = optimizer_name
         self.active_groups = active_groups
+        match contrastive_approach:
+            case 'simclr': self.criterion = NTXentLoss()
+            case 'slfpn' : self.criterion = MSELoss()
+            case 'supcon': self.criterion = SupConLoss()
+
 
     def forward(self, x):
         return self.model(x)
