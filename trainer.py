@@ -22,11 +22,13 @@ def supcon_trainer(model, train_loader, criterion, optimizer, epochs):
     for step, (data, label) in enumerate(tqdm(train_loader)):
         optimizer.zero_grad()
         first_batch, second_batch = global_global_augmentation(data, device)
-        batch_label = label.shape[0]
-        instances_batch  = torch.cat([first_batch, second_batch], dim=0)
-        z_instance_batch = model(instances_batch)
-        z_first_batch, z_second_batch = torch.split(z_instance_batch, [batch_label, batch_label], dim=0)
-        z = torch.cat([z_first_batch, z_second_batch], dim=0)
+        embedding_1 = model(first_batch)
+        embedding_2 = model(second_batch)
+        # batch_label = label.shape[0]
+        # instances_batch  = torch.cat([first_batch, second_batch], dim=0)
+        # z_instance_batch = model(instances_batch)
+        # z_first_batch, z_second_batch = torch.split(z_instance_batch, [batch_label, batch_label], dim=0)
+        z = torch.cat([embedding_1, embedding_2], dim=0)
         labels = torch.cat([label, label], dim=0)
         loss = criterion(z, labels)
         loss.backward()
