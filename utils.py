@@ -8,13 +8,19 @@ from app_logger import logger
 
 from typing import Literal, Any, List, cast, get_args
 
-BackBonesType = Literal["resnet50", "resnet101", "resnet152",
+BackBonesType = Literal["resnet18", "resnet34", "resnet50", "resnet101", "resnet152",
                         "mobilenet_v3_small", "mobilenet_v3_large",
                         "vit_b_16", "vit_b_32", "vit_l_16", "vit_l_32", "vit_h_14"
                         ]
 
 # get_args(Literal["A", "B"]) -->	('A', 'B') , lisst(get_args(Literal["A", "B"])) ---> ["A", "B"]
 BACKBONES = list(get_args(BackBonesType))
+
+ContrastiveApproachType = Literal['simclr','slfpn', 'supcon']
+CONTRASTIVES_APPROACHES = list(get_args(ContrastiveApproachType))
+
+OptimizerType = Literal['sgd', 'adam', 'adamw', 'rmsprop']
+OPTIMIZERS = list(get_args(OptimizerType))
 
 def plot_training_loss(epoch_losses, epochs):
  plt.figure(figsize=(8, 6))
