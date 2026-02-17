@@ -16,28 +16,28 @@ device = ("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # Train supcon with SupCon losses
-def supcon_trainer(model, train_loader, criterion, optimizer, epochs):
-    epoch_losses = []
-    running_loss = 0
-    for step, (data, label) in enumerate(tqdm(train_loader)):
-        optimizer.zero_grad()
-        first_batch, second_batch = global_global_augmentation(data, device)
-        embedding_1 = model(first_batch)
-        embedding_2 = model(second_batch)
-        # batch_label = label.shape[0]
-        # instances_batch  = torch.cat([first_batch, second_batch], dim=0)
-        # z_instance_batch = model(instances_batch)
-        # z_first_batch, z_second_batch = torch.split(z_instance_batch, [batch_label, batch_label], dim=0)
-        z = torch.cat([embedding_1, embedding_2], dim=0)
-        labels = torch.cat([label, label], dim=0)
-        loss = criterion(z, labels)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-    epoch_loss = running_loss / len(train_loader)
-    epoch_losses.append(epoch_loss)
-    print(epoch_loss)
-    plot_training_loss(epoch_loss, epochs)
+# def supcon_trainer(model, train_loader, criterion, optimizer, epochs):
+#     epoch_losses = []
+#     running_loss = 0
+#     for step, (data, label) in enumerate(tqdm(train_loader)):
+#         optimizer.zero_grad()
+#         first_batch, second_batch = global_global_augmentation(data, device)
+#         embedding_1 = model(first_batch)
+#         embedding_2 = model(second_batch)
+#         batch_label = label.shape[0]
+#         instances_batch  = torch.cat([first_batch, second_batch], dim=0)
+#         z_instance_batch = model(instances_batch)
+#         z_first_batch, z_second_batch = torch.split(z_instance_batch, [batch_label, batch_label], dim=0)
+#         z = torch.cat([embedding_1, embedding_2], dim=0)
+#         labels = torch.cat([label, label], dim=0)
+#         loss = criterion(z, labels)
+#         loss.backward()
+#         optimizer.step()
+#         running_loss += loss.item()
+#     epoch_loss = running_loss / len(train_loader)
+#     epoch_losses.append(epoch_loss)
+#     print(epoch_loss)
+#     plot_training_loss(epoch_loss, epochs)
           
 # Train Simclr with the NT-Xent losses
 
