@@ -56,7 +56,7 @@ class SLFPN(nn.Module):
 
 
 class CLRModule(L.LightningModule):
-    def __init__(self, model, projector=None, training_method: Literal['simclr','slfpn'] = 'simclr',
+    def __init__(self, model, projector=None, training_method: Literal['simclr','slfpn', 'supcon'] = 'simclr',
                  optimizer_name: Literal['sgd', 'adam', 'adamw', 'rmsprop'] = 'adam',
                  lr=1e-3,
                  active_groups=None):
