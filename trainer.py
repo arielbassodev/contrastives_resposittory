@@ -16,12 +16,12 @@ device = ("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # Train supcon with SupCon losses
-def supcon_trainer(model, train_loader, criterion, optimizer, epochs, active_groups):
+def supcon_trainer(model, train_loader, criterion, optimizer, epochs):
     epoch_losses = []
     running_loss = 0
     for step, (data, label) in enumerate(tqdm(train_loader)):
         optimizer.zero_grad()
-        first_batch, second_batch = global_global_augmentation(data, active_groups, device)
+        first_batch, second_batch = global_global_augmentation(data, device)
         batch_label = label.shape[0]
         instances_batch  = torch.cat([first_batch, second_batch], dim=0)
         z_instance_batch = model(instances_batch)
@@ -39,14 +39,14 @@ def supcon_trainer(model, train_loader, criterion, optimizer, epochs, active_gro
           
 # Train Simclr with the NT-Xent losses
 
-def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_groups):
+def Simclr_trainer(model, train_loader, criterion, optimizer, epochs):
   epoch_losses = []
   
   for epoch in range(epochs): 
     running_loss = 0 
     for step, (data, _) in enumerate(tqdm(train_loader)):
         optimizer.zero_grad()
-        first_batch, second_batch = global_global_augmentation(data, active_groups, device)
+        first_batch, second_batch = global_global_augmentation(data, device)
         embd_batch_1 = model(first_batch)
         embd_batch_2 = model(second_batch)
         loss = criterion(embd_batch_1, embd_batch_2)
@@ -60,7 +60,7 @@ def Simclr_trainer(model, train_loader, criterion, optimizer, epochs, active_gro
         
 # Train Slfpn with the MSE loss
         
-def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, active_groups):
+def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs):
     epoch_losses = []
   
     for epoch in range(epochs):
@@ -68,7 +68,7 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
         print(f"Début de l'époque {epoch + 1}")
         for step, (data, label) in enumerate(tqdm(train_loader)):
             optimizer.zero_grad()
-            batch_1, batch_2 = global_global_augmentation(data, active_groups)
+            batch_1, batch_2 = global_global_augmentation(data, device)
             batch_1, batch_2 = batch_1.to(device), batch_2.to(device)
             data = data.to(device)
             embedding_batch_1 = model(batch_1)
@@ -94,7 +94,7 @@ def Slfpn_trainer(model, projector, train_loader, criterion, optimizer, epochs, 
 
 backbone = resnet50(pretrained=True)
 backbone = nn.Sequential(*list(backbone.children())[:-1]).to(device)
-projection_head = Projection_class(2048, 1024, 128).to(device)
+projection_head = ProjectionClass(2048, 1024, 128).to(device)
 model = SimCLR(backbone, projection_head)
 optimizer = optim.SGD(model.parameters(), lr=0.001)
 # criterion_simclr = NTXentLoss()

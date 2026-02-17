@@ -1,10 +1,13 @@
 from datetime import datetime
 import torch
 from lightning.pytorch import Trainer, seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.loggers import TensorBoardLogger
 from contrastive_approaches import CLRLightningModule
 from datamodule import CassavaDataModule
 import argparse
+import os
+import re
 from pathlib import Path
 from app_logger import logger
 from utils import BackBonesType, BACKBONES, CONTRASTIVES_APPROACHES, OPTIMIZERS
@@ -77,14 +80,7 @@ def main():
                            random_seed=random_seed)
     dm.setup(stage="fit")  # calling in the fit stage to initialize the train and validation dataloaders
 
-    current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    checkpoint_callback = ModelCheckpoint(
-        dirpath='checkpoints',
-        monitor="val_loss",
-        mode="min",
-        save_top_k=1,
-        filename="best-simclr-{epoch:02d}-{val_loss:.2f}--" + current_datetime
-    )
+
 
     l_model = CLRLightningModule(clr_model_or_backbone_name=args.backbone,
                                  contrastive_approach=args.contrastive_approach,
@@ -92,20 +88,58 @@ def main():
                                  lr=args.lr,
                                  active_groups=["rotations"])
 
+    logger_save_dir='./my_logs'
+    backbone_cat = re.match(r"^[^0-9_]+", args.backbone).group()
+    checkpoints_dir = os.path.join('checkpoints', 'clr', backbone_cat)
+
+    # Will save logs into the given subfolder
+    logger_save_dir = os.path.join(logger_save_dir, 'clr_tb_logs')
+    os.makedirs(logger_save_dir, exist_ok=True)
+    os.makedirs(checkpoints_dir, exist_ok=True)
+
+    tb_logger = TensorBoardLogger(save_dir=logger_save_dir, name=backbone_cat)
+
+    current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=checkpoints_dir,
+        monitor="train_loss",
+        mode="min",
+        save_top_k=1,
+        filename=f'{args.backbone}--{args.contrastive_approach}--{current_datetime}--version_{tb_logger.version}' + '--best-model-{epoch:02d}--{train_loss:.2f}--{val_loss:.2f}'
+    )
+
     trainer = Trainer(
         max_epochs=args.max_epochs,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu',
+        log_every_n_steps=1,
         enable_model_summary=True,
         callbacks=[checkpoint_callback],
+        logger=tb_logger,
         deterministic=True)
 
     trainer.fit(model=l_model, datamodule=dm)
     validation_metrics = trainer.validate(l_model, datamodule=dm, ckpt_path="best")
-    return {'trainer': trainer, 'validation_metrics': validation_metrics}
+    # return {'trainer': trainer, 'validation_metrics': validation_metrics}
+    best_loss = trainer.checkpoint_callback.best_model_score
+
+
+    return  {
+      'validation_metrics': validation_metrics[0],
+      'best_train_loss': best_loss,
+      'model': l_model,
+      'datamodule': dm,
+      'trainer': trainer,
+      'best_model_path': checkpoint_callback.best_model_path}
 
 if __name__ == "__main__":
+    logger.add_file_handler_to_logger(file_name='clr_log_output')
+    logger.info('============== [Starting] =======================')
     ret = main()
-    print(ret['validation_metrics'])
+    logger.info('Validation metrics: %s', ret['validation_metrics'])
+    logger.info('Best train loss: %s', ret['best_train_loss'])
+    logger.info('Best Model Path: %s', ret['best_model_path'])
+    logger.info('==================================================')
+
 
 
 
