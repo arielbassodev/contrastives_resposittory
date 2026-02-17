@@ -150,7 +150,14 @@ class CLRLightningModule(L.LightningModule):
         loss = loss_1 + loss_2 + loss_3
         return loss
     def __supcon_shared_step(self, batch):
-        pass
+        data, label = batch
+        batch_1, batch_2 = global_global_augmentation(data, self.device)
+        embedding_batch_1 = self(batch_1)
+        embedding_batch_2 = self(batch_2)
+        labels = torch.cat([label, label], dim=0)
+        embedding_batch = torch.cat([embedding_batch_1, embedding_batch_2], dim=0)
+        loss = self.criterion(embedding_batch, labels)
+        return loss
     def _shared_step(self, batch):
         loss = None
         match self.contrastive_approach:

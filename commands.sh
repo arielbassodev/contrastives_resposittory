@@ -1,6 +1,6 @@
 
 python trainer_deterministic.py \
---max_epochs 3 \
+--max_epochs 100 \
 --batch_size 32 \
 --backbone resnet50 \
 --contrastive_approach simclr \
