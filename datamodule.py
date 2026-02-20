@@ -183,15 +183,22 @@ class CassavaDataModule(L.LightningDataModule):
 
             logger.info("Val Class Frequencies --- %s", self._class_frequencies(_v))
             logger.info("Test Class Frequencies --- %s", self._class_frequencies(_t))
+            logger.info("Train U Validation Class Frequencies --- %s", self._class_frequencies(np.concatenate([train_targets, _v])))
+
         if stage == "fit":
-            # Wrap the base subsets with the custom TransformedSubset to apply different transforms + Data augmentation
+            # # Wrap the base subsets with the custom TransformedSubset to apply different transforms + Data augmentation
+            # train_subset = Subset(self.full_dataset, self.train_indices)
+            # val_subset = Subset(self.full_dataset, self.val_indices)
+            # self.train_ds = TransformedDataset(train_subset, transform=self.train_transform)
+            #
+            # # TODO: Do we need to augment data for validation and testing??? --No
+            # self.val_ds = TransformedDataset(val_subset, transform=self.inference_transform)
+
+            # Look a bit weird, but just want to keep the exact steps of data spliting as those  that will be used during the finetuning: test dataset should be the same as here
+            self.train_indices = np.concatenate([self.train_indices, self.val_indices])
             train_subset = Subset(self.full_dataset, self.train_indices)
-            val_subset = Subset(self.full_dataset, self.val_indices)
+            logger.info('Train size after merging train and validation %s', len(train_subset))
             self.train_ds = TransformedDataset(train_subset, transform=self.train_transform)
-
-            # TODO: Do we need to augment data for validation and testing??? --No
-            self.val_ds = TransformedDataset(val_subset, transform=self.inference_transform)
-
         # Assign test dataset for use in dataloader(s)
         if stage == "test":
             # TODO: Do we need to augment data for validation and testing??? No
@@ -207,7 +214,9 @@ class CassavaDataModule(L.LightningDataModule):
                           generator=torch.Generator().manual_seed(self.random_seed), num_workers=self.num_workers)
 
     def val_dataloader(self):
-        return DataLoader(self.val_ds, batch_size=self.batch_size, num_workers=self.num_workers)
+        # return DataLoader(self.val_ds, batch_size=self.batch_size, num_workers=self.num_workers)
+        # Validation dataloader is exactly the same as train but without shuffling
+        return DataLoader(self.train_ds, batch_size=self.batch_size, num_workers=self.num_workers)
 
     def test_dataloader(self):
         return DataLoader(self.test_ds, batch_size=self.batch_size, num_workers=self.num_workers)

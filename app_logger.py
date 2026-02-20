@@ -24,6 +24,16 @@ class AppLogger:
             stream_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
             self.logger.addHandler(stream_handler)
 
+        self.csv_field_names = ['log_session_id', 'date_time', 'logs_sub_folder', 'value_to_optimize', 'trial_number',
+                                'trial_objective_value', 'monitor', 'img_dir_path', 'csv_file', 'json_file',
+                                'batch_size', 'val_split', 'test_split',
+                                'num_workers', 'contrastive_approach',
+                                'backbone', 'optimizer', 'learning_rate',
+                                'val_loss', 'test_loss',
+                                'best_model_epoch', 'best_model_path',
+                                'duration_in_minutes',
+                                'max_epochs', 'patience',
+                                ]
 
     def add_file_handler_to_logger(self, file_name: str = 'cassava_logger'):
         already_exit = False
@@ -50,6 +60,24 @@ class AppLogger:
     def force_log_write(self):
         for handler in self.logger.handlers:
             handler.flush()
+    def log_to_csv(self, values_dict: dict):
+        values = {
+            'log_session_id': self.log_session_id,
+            'date_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'best_model_epoch': values_dict['best_model_path'].split("epoch=")[1].split('-')[0] if values_dict[
+                'best_model_path'] else '',
+            **values_dict
+        }
+        self.info('VALUES %s', values)
+        absolute_file_path = self.get_logger_file_path().removesuffix('.log') + '.csv'
+        with open(absolute_file_path, 'a', newline='', encoding='utf-8') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=self.csv_field_names)
+
+            # Write header only if file is empty
+            if csv_file.tell() == 0:
+                writer.writeheader()
+
+            writer.writerow(values)
 
     def info(self, *args, **kwargs):
         self.logger.info(*args, **kwargs)

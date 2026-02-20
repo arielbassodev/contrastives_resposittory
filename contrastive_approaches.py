@@ -104,8 +104,7 @@ class CLRLightningModule(L.LightningModule):
     def __init__(self, clr_model_or_backbone_name: CLRModel | BackBonesType,
                  contrastive_approach: ContrastiveApproachType  = 'simclr',
                  optimizer_name: OptimizerType = 'adam',
-                 lr: float=1e-3,
-                 active_groups: list=None):
+                 lr: float=1e-3):
         super().__init__()
         self.backbone_name = clr_model_or_backbone_name if isinstance(clr_model_or_backbone_name, str) else None
         self.save_hyperparameters(ignore=[] if isinstance(clr_model_or_backbone_name, str) else ['clr_model'])
@@ -119,7 +118,6 @@ class CLRLightningModule(L.LightningModule):
         self.contrastive_approach = contrastive_approach
         self.lr = lr
         self.optimizer_name = optimizer_name
-        self.active_groups = active_groups
         match contrastive_approach:
             case 'simclr': self.criterion = NTXentLoss()
             case 'slfpn' : self.criterion = MSELoss()

@@ -8,7 +8,7 @@ from PIL import Image
 transformation_groups = {
     "translations": [transforms.RandomAffine(degrees=0,translate=(0.8, 0.0))],
     "rotations":    [transforms.RandomRotation(degrees=(10, 200))],
-    "ResizedCrop":  [transforms.RandomResizedCrop(size=128, scale=(0.3, 1.0))],
+    "ResizedCrop":  [transforms.RandomResizedCrop(size=224, scale=(0.3, 1.0))],
     "ColorJitter":  [transforms.RandomApply([transforms.ColorJitter(brightness=0.8,contrast=0.8,saturation=0.8,hue=0.4)],p=0.8)],
     "GaussianBlur": [transforms.RandomApply([transforms.GaussianBlur(kernel_size=9,sigma=(0.1, 25.0))],p=0.5)],
     "RandomHorizontalFlip": [transforms.RandomHorizontalFlip(p=0.5)],
