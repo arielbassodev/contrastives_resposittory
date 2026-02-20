@@ -11,6 +11,8 @@ python trainer_deterministic.py \
 
 
 
+
+
 python trainer_deterministic.py \
 --max_epochs 3 \
 --batch_size 32 \
